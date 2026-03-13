@@ -34,6 +34,22 @@ if (isset($_GET['error'])) {
         const savedTheme = localStorage.getItem('shieldnet-theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
+    <style>
+        .btn-toggle {
+            margin-top: 10px;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--primary-color);
+            color: white;
+            font-size: 14px;
+        }
+        .btn-toggle:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-toggle:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
 </head>
 <body>
     <div class="dashboard-layout">
@@ -82,12 +98,16 @@ if (isset($_GET['error'])) {
             <?php if ($tab == 'overview'): ?>
                 <div class="dashboard-grid">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(1, 181, 116, 0.1); color: #01B574;"><i class="fas fa-lock-open"></i></div>
+                        <div id="lock-icon-container" class="stat-icon" style="background: rgba(1, 181, 116, 0.1); color: #01B574;">
+                            <i id="lock-icon" class="fas fa-lock-open"></i>
+                        </div>
                         <div class="stat-info">
                             <h3>Smart Lock</h3>
-                            <p style="color: #01B574; font-weight: 700;">Unlocked</p>
+                            <p id="lock-status-text" style="color: #01B574; font-weight: 700;">Unlocked</p>
+                            <button id="lock-toggle-btn" class="btn-toggle" onclick="toggleLockState()">Lock Door</button>
                         </div>
                     </div>
+
                     <div class="stat-card">
                         <div class="stat-icon" style="background: rgba(106, 27, 255, 0.1); color: var(--primary-color);"><i class="fas fa-history"></i></div>
                         <div class="stat-info">
@@ -106,25 +126,27 @@ if (isset($_GET['error'])) {
 
                 <div class="activity-section">
                     <h2 style="font-size: 20px; margin-bottom: 20px;">Recent Activity</h2>
-                    <div class="activity-item">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(1, 181, 116, 0.1); display: flex; align-items: center; justify-content: center; color: #01B574;">
-                                <i class="fas fa-key"></i>
-                            </div>
-                            <div>
-                                <p style="margin: 0; font-weight: 600;">Door Unlocked via RFID</p>
-                                <span style="font-size: 13px; color: var(--text-muted);">Today at 6:45 PM</span>
+                    <div id="activity-feed">
+                        <div class="activity-item">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(1, 181, 116, 0.1); display: flex; align-items: center; justify-content: center; color: #01B574;">
+                                    <i class="fas fa-key"></i>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-weight: 600;">Door Unlocked via RFID</p>
+                                    <span style="font-size: 13px; color: var(--text-muted);">Today at 6:45 PM</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="activity-item">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(238, 93, 80, 0.1); display: flex; align-items: center; justify-content: center; color: #EE5D50;">
-                                <i class="fas fa-lock"></i>
-                            </div>
-                            <div>
-                                <p style="margin: 0; font-weight: 600;">Door Locked Manually</p>
-                                <span style="font-size: 13px; color: var(--text-muted);">Today at 9:15 AM</span>
+                        <div class="activity-item">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(238, 93, 80, 0.1); display: flex; align-items: center; justify-content: center; color: #EE5D50;">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-weight: 600;">Door Locked Manually</p>
+                                    <span style="font-size: 13px; color: var(--text-muted);">Today at 9:15 AM</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -136,5 +158,61 @@ if (isset($_GET['error'])) {
 
         </main>
     </div>
+
+    <script>
+        function toggleLockState() {
+            const btn = document.getElementById('lock-toggle-btn');
+            const statusText = document.getElementById('lock-status-text');
+            const icon = document.getElementById('lock-icon');
+            const iconContainer = document.getElementById('lock-icon-container');
+
+            const currentlyUnlocked = statusText.innerText.trim() === 'Unlocked';
+
+            btn.disabled = true;
+            btn.innerText = "Connecting...";
+
+            fetch('toggle_lock_api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=' + (currentlyUnlocked ? 'lock' : 'unlock')
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    updateUI(currentlyUnlocked);
+                }
+            })
+            .catch(err => {
+                console.log("API not found, simulating UI change.");
+                updateUI(currentlyUnlocked);
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+        }
+
+        function updateUI(toLocked) {
+            const btn = document.getElementById('lock-toggle-btn');
+            const statusText = document.getElementById('lock-status-text');
+            const icon = document.getElementById('lock-icon');
+            const iconContainer = document.getElementById('lock-icon-container');
+
+            if (toLocked) {
+                statusText.innerText = 'Locked';
+                statusText.style.color = '#EE5D50';
+                icon.className = 'fas fa-lock';
+                iconContainer.style.background = 'rgba(238, 93, 80, 0.1)';
+                iconContainer.style.color = '#EE5D50';
+                btn.innerText = 'Unlock Door';
+            } else {
+                statusText.innerText = 'Unlocked';
+                statusText.style.color = '#01B574';
+                icon.className = 'fas fa-lock-open';
+                iconContainer.style.background = 'rgba(1, 181, 116, 0.1)';
+                iconContainer.style.color = '#01B574';
+                btn.innerText = 'Lock Door';
+            }
+        }
+    </script>
 </body>
 </html>

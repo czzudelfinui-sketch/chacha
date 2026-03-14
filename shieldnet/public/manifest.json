@@ -1,0 +1,22 @@
+{
+  "name": "ShieldNet Security",
+  "short_name": "ShieldNet",
+  "description": "Premium Smart Lock & Security Management",
+  "start_url": "login.php",
+  "display": "standalone",
+  "background_color": "#F4F7FE",
+  "theme_color": "#6A1BFF",
+  "icons": [
+    {
+      "src": "assets/1-removebg-preview.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/1-removebg-preview.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

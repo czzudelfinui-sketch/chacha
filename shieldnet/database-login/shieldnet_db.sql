@@ -68,6 +68,28 @@ INSERT INTO `rfid_cards` (`id`, `user_id`, `card_uid`, `status`, `created_at`) V
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lock_logs`
+--
+
+CREATE TABLE `lock_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `device` varchar(50) NOT NULL,
+  `action` varchar(20) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `lock_logs`
+--
+
+INSERT INTO `lock_logs` (`id`, `user_id`, `device`, `action`, `created_at`) VALUES
+(1, 1, 'rfid', 'unlock', '2026-03-13 13:49:38'),
+(2, 2, 'web/app', 'lock', '2026-03-13 13:49:45');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `system_logs`
 --
 
@@ -130,6 +152,13 @@ ALTER TABLE `rfid_cards`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `lock_logs`
+--
+ALTER TABLE `lock_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Indexes for table `system_logs`
 --
 ALTER TABLE `system_logs`
@@ -159,6 +188,12 @@ ALTER TABLE `rfid_cards`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `lock_logs`
+--
+ALTER TABLE `lock_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `system_logs`
 --
 ALTER TABLE `system_logs`
@@ -173,6 +208,12 @@ ALTER TABLE `users`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `lock_logs`
+--
+ALTER TABLE `lock_logs`
+  ADD CONSTRAINT `lock_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `rfid_cards`

@@ -19,12 +19,10 @@ if (!in_array($action, ['lock', 'unlock'])) {
 $newStatus = ($action === 'unlock') ? 'unlocked' : 'locked';
 $userId    = $_SESSION['user_id'];
 
-// Update lock_status table (assumes a single row with id = 1)
-// Also log the action to lock_logs table
+
 $conn->begin_transaction();
 
 try {
-    // Upsert lock status
     $stmt = $conn->prepare("
         INSERT INTO lock_status (id, status, updated_by, updated_at)
         VALUES (1, ?, ?, NOW())
@@ -34,7 +32,6 @@ try {
     $stmt->execute();
     $stmt->close();
 
-    // Log the action
     $stmt2 = $conn->prepare("
         INSERT INTO lock_logs (user_id, action, created_at)
         VALUES (?, ?, NOW())
